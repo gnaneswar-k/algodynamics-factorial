@@ -21,7 +21,7 @@ import {
   FactorialState,
 } from './factorialSlice';
 import styles from './Factorial.module.css';
-import client from '../../app/api';
+import API from '../../app/api';
 
 // List of Actions
 const Action = Object.freeze({
@@ -40,28 +40,59 @@ const Action = Object.freeze({
   SelectNumber: 'SelectNumber',
 })
 
-// Initialisation
-let preState: FactorialState;
-let type: string;
-let initialised = false;
-let runId: string;
-// Getting User ID
-const queryString = window.location.search;
-const urlParams = new URLSearchParams(queryString);
-const userId = urlParams.get('id');
-// Generating Run ID
-if (userId !== null) {
-  client
+// API Function Calls
+const createRun = async (userId: string) => {
+  await API
     .post(
-      "/createRun", {
+      `/createRun`, {
       id: userId,
-      machineType: 4,
+      machineId: 4,
     })
     .then(response => {
       console.log(response);
       console.log(response.data);
       runId = response.data.id;
     });
+};
+const updateRun = async (
+  id: number,
+  payload: any,
+  runId: string,
+  type: string,
+  preState: FactorialState,
+  postState: FactorialState
+) => {
+  await API
+    .post(
+      `/updateRun`, {
+      id: id,
+      payload: payload,
+      runId: runId,
+      type: type,
+      preState: preState,
+      postState: postState,
+      timestamp: Date.now()
+    })
+    .then(response => {
+      console.log(response);
+      console.log(response.data);
+    });
+};
+
+// Initialisation
+let preState: FactorialState;
+let type: string;
+let initialised = false;
+let runId: string;
+
+// Getting User ID
+const queryString = window.location.search;
+const urlParams = new URLSearchParams(queryString);
+const userId = urlParams.get('id');
+
+// Generating Run ID
+if (userId !== null) {
+  createRun(userId);
 }
 
 export function Factorial() {
@@ -81,21 +112,7 @@ export function Factorial() {
   useEffect(() => {
     console.log('id:', 4, 'userId:', userId, 'runId:', runId, 'type:', type, 'preState:', preState, 'postState:', state.present, 'timestamp:', Date.now());
     if (userId !== null) {
-      client
-        .post(
-          "/updateRun", {
-          id: 4,
-          payload: {},
-          runId: runId,
-          type: type,
-          preState: preState,
-          postState: state.present,
-          timestamp: Date.now()
-        })
-        .then(response => {
-          console.log(response);
-          console.log(response.data);
-        });
+      updateRun(4, {}, runId, type, preState, state.present);
     }
   })
 
