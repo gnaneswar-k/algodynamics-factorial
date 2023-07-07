@@ -1,7 +1,6 @@
 import React, { useEffect } from 'react';
 import { ActionCreators } from 'redux-undo';
-import { nanoid } from '@reduxjs/toolkit';
-import { useParams } from 'react-router-dom';
+// import { nanoid } from '@reduxjs/toolkit';
 // import axios from 'axios';
 
 import { useAppSelector, useAppDispatch } from '../../app/hooks';
@@ -22,8 +21,9 @@ import {
   FactorialState,
 } from './factorialSlice';
 import styles from './Factorial.module.css';
-// import baseURL from '../../../../DT-study-frontend/src/pages/api'
+import client from '../../app/api';
 
+// List of Actions
 const Action = Object.freeze({
   Init: 'Init',
   Undo: 'Undo',
@@ -40,47 +40,66 @@ const Action = Object.freeze({
   SelectNumber: 'SelectNumber',
 })
 
+// Initialisation
 let preState: FactorialState;
 let type: string;
-const runId = nanoid();
 let initialised = false;
+let runId: string;
+// Getting User ID
+const queryString = window.location.search;
+const urlParams = new URLSearchParams(queryString);
+const userId = urlParams.get('id');
+// Generating Run ID
+if (userId !== null) {
+  client
+    .post(
+      "/createRun", {
+      id: userId,
+      machineType: 4,
+    })
+    .then(response => {
+      console.log(response);
+      console.log(response.data);
+      runId = response.data.id;
+    });
+}
 
 export function Factorial() {
-  const dispatch = useAppDispatch();
+  // Redux
+  const dispatch = useAppDispatch(); // Used to call any Redux reducer.
+  // Fetches required value from Redux store.
   const factValue = useAppSelector(selectFactorial);
   const factArray = useAppSelector(selectArray);
   const indexOne = useAppSelector(selectOne);
   const indexTwo = useAppSelector(selectTwo);
   const state = useAppSelector(selectState);
-  // const [queryParameters] = useSearchParams();
-  // const userId = queryParameters.get("id");
-  const queryString = window.location.search;
-  const urlParams = new URLSearchParams(queryString);
-  const userId = urlParams.get('id');
-  // const userId = useParams();
+
+  // Initialisation
   let inputValue = 1;
-  console.log('id:', 4, 'userId:', userId, 'runId:', runId, 'type:', type, 'preState:', preState, 'postState:', state.present, 'timestamp:', Date.now());
+  // console.log('id:', 4, 'userId:', userId, 'runId:', runId, 'type:', type, 'preState:', preState, 'postState:', state.present, 'timestamp:', Date.now());
 
   useEffect(() => {
     console.log('id:', 4, 'userId:', userId, 'runId:', runId, 'type:', type, 'preState:', preState, 'postState:', state.present, 'timestamp:', Date.now());
-    // axios
-    //   .post(
-    //     /* `${baseURL}/ */`/${userId}/post-update-run/`, {
-    //     id: 4,
-    //     runId: runId,
-    //     type: type,
-    //     preState: preState,
-    //     postState: state.present,
-    //     timestamp: Date.now()
-    //   })
-    //   .then(response => {
-    //     console.log(response);
-    //     console.log(response.data);
-    //   });
+    if (userId !== null) {
+      client
+        .post(
+          "/updateRun", {
+          id: 4,
+          payload: {},
+          runId: runId,
+          type: type,
+          preState: preState,
+          postState: state.present,
+          timestamp: Date.now()
+        })
+        .then(response => {
+          console.log(response);
+          console.log(response.data);
+        });
+    }
   })
 
   return (
-    // Make a function to initialise the factorial value.
     <div>
       <div
         id='Initialiser'
