@@ -21,7 +21,7 @@ import {
   FactorialState,
 } from './factorialSlice';
 import styles from './Factorial.module.css';
-import API from '../../app/api';
+import API from '../../api';
 
 // List of Actions
 const Action = Object.freeze({
