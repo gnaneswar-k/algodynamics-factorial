@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { ActionCreators } from 'redux-undo';
 // import { nanoid } from '@reduxjs/toolkit';
 // import axios from 'axios';
@@ -41,59 +41,71 @@ const Action = Object.freeze({
 })
 
 // API Function Calls
-const createRun = async (userId: string) => {
+const createRun = async (userId: string, setRunId: any) => {
   await API
     .post(
-      `/createRun`, {
+      `/createRun`, JSON.stringify({
       id: userId,
-      machineId: 4,
-    })
+      machineType: 4,
+    }))
     .then(response => {
-      console.log(response);
-      console.log(response.data);
-      runId = response.data.id;
-    });
+      // console.log(response);
+      // console.log(response.data);
+      // runId = response.data.id;
+      setRunId(response.data.id);
+    }).catch(error => {
+      console.log(error);
+    } 
+  );
 };
 const updateRun = async (
-  id: number,
   payload: any,
   runId: string,
   type: string,
   preState: FactorialState,
   postState: FactorialState
 ) => {
+  if (runId === "") {
+    return;
+  }
+  console.log(JSON.stringify({
+    id: runId,
+    payload: payload === undefined ? {} : payload,
+    type: type,
+    preState: preState === undefined ? {} : preState,
+    postState: postState === undefined ? {} : postState,
+    timestamp: Date.now()
+  }));
+  // if runId is undefined, then the user has not been initialised
   await API
     .post(
-      `/updateRun`, {
-      id: id,
-      payload: payload,
-      runId: runId,
+      `/updateRun`, JSON.stringify({
+      id: runId,
+      payload: payload === undefined ? {} : payload,
       type: type,
-      preState: preState,
-      postState: postState,
+      preState: preState === undefined ? {} : preState,
+      postState: postState === undefined ? {} : postState,
       timestamp: Date.now()
-    })
+    }))
     .then(response => {
       console.log(response);
       console.log(response.data);
-    });
+    }).catch(error => {
+      console.log(error);
+    } 
+  );
 };
 
 // Initialisation
-let preState: FactorialState;
-let type: string;
-let initialised = false;
-let runId: string;
+// let preState: FactorialState;
+// let type: string;
+// let initialised = false;
+// let runId: string;
 
 // Getting User ID
 const queryString = window.location.search;
 const urlParams = new URLSearchParams(queryString);
 const userId = urlParams.get('id');
-
-// Generating Run ID
-if (userId !== null) {
-  createRun(userId);
-}
 
 export function Factorial() {
   // Redux
@@ -107,47 +119,62 @@ export function Factorial() {
 
   // Initialisation
   let inputValue = 1;
-  // console.log('id:', 4, 'userId:', userId, 'runId:', runId, 'type:', type, 'preState:', preState, 'postState:', state.present, 'timestamp:', Date.now());
+  const [runId, setRunId] = useState("");
+  const [preState, setPreState] = useState<FactorialState>(
+    {} as FactorialState
+  );
+  const [type, setType] = useState("Uninitialised");
+
+  const [initialised, setInitialised] = useState(false);
+
+  // Generating Run ID
+  if (userId !== null && runId === "") {
+    createRun(userId, setRunId);
+  }
 
   useEffect(() => {
-    console.log('id:', 4, 'userId:', userId, 'runId:', runId, 'type:', type, 'preState:', preState, 'postState:', state.present, 'timestamp:', Date.now());
     if (userId !== null) {
-      updateRun(4, {}, runId, type, preState, state.present);
+      updateRun({}, runId, type, preState, state.present);
     }
-  })
+  });
 
   return (
     <div>
       <div
-        id='Initialiser'
+        id="Initialiser"
         style={{
-          display: initialised ? 'none' : 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          justifyContent: 'center',
+          display: initialised ? "none" : "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          justifyContent: "center",
         }}
       >
         {/* Initialiser */}
         <input
-          aria-label='Initialiser Input Text Box'
-          type='text'
-          id='initInput'
-          name='initInput'
+          aria-label="Initialiser Input Text Box"
+          type="text"
+          id="initInput"
+          name="initInput"
           required
           defaultValue={1}
           size={1}
-          onChange={e => { inputValue = Number(e.target.value) }}
-          style={{ textAlign: 'center' }}
+          onChange={(e) => {
+            inputValue = Number(e.target.value);
+          }}
+          style={{ textAlign: "center" }}
         />
         <button
-          type='button'
-          aria-label='initialise'
+          type="button"
+          aria-label="initialise"
           onClick={() => {
-            preState = { ...state.present };
-            type = Action.Init;
+            // preState = { ...state.present };
+            setPreState({ ...state.present });
+            // type = Action.Init;
+            setType(Action.Init);
             dispatch(Init(inputValue));
             dispatch(ActionCreators.clearHistory());
-            initialised = true;
+            // initialised = true;
+            setInitialised(true);
           }}
           disabled={factValue !== null || factArray.length > 0}
         >
@@ -156,8 +183,8 @@ export function Factorial() {
       </div>
       <div
         style={{
-          display: initialised ? 'flex' : 'none',
-          flexDirection: 'column',
+          display: initialised ? "flex" : "none",
+          flexDirection: "column",
         }}
       >
         {/* Number */}
@@ -170,14 +197,22 @@ export function Factorial() {
             <span>
               {factArray.map((num, index) => (
                 <button
-                  type='button'
+                  type="button"
                   key={index.toString()}
                   onClick={() => {
-                    preState = { ...state.present };
-                    type = Action.SelectNumber;
+                    // preState = { ...state.present };
+                    setPreState({ ...state.present });
+                    // type = Action.SelectNumber;
+                    setType(Action.SelectNumber);
                     dispatch(HandleSelect(index));
                   }}
-                  className={(factValue === null && factArray.length === 1) ? styles.final : (index === indexOne || index === indexTwo) ? styles.selected : styles.regular}
+                  className={
+                    factValue === null && factArray.length === 1
+                      ? styles.final
+                      : index === indexOne || index === indexTwo
+                      ? styles.selected
+                      : styles.regular
+                  }
                 >
                   {num}
                 </button>
@@ -188,11 +223,13 @@ export function Factorial() {
         {/* Main Rule Buttons */}
         <div className={styles.row}>
           <button
-            type='button'
-            aria-label='Factorial Rule'
+            type="button"
+            aria-label="Factorial Rule"
             onClick={() => {
-              preState = { ...state.present };
-              type = Action.FactorialRule;
+              // preState = { ...state.present };
+              setPreState({ ...state.present });
+              // type = Action.FactorialRule;
+              setType(Action.FactorialRule);
               dispatch(FactorialRule());
             }}
             disabled={factValue === null || factValue <= 0}
@@ -200,15 +237,16 @@ export function Factorial() {
             Apply Factorial Rule
           </button>
           <button
-            type='button'
-            aria-label='Multiply Rule'
+            type="button"
+            aria-label="Multiply Rule"
             onClick={() => {
-              preState = { ...state.present };
-              type = Action.MultiplyRule;
+              // preState = { ...state.present };
+              setPreState({ ...state.present });
+              // type = Action.MultiplyRule;
+              setType(Action.MultiplyRule);
               if (indexOne === null || indexTwo == null) {
-                alert('Please select two numbers to multiply.');
-              }
-              else {
+                alert("Please select two numbers to multiply.");
+              } else {
                 dispatch(MultiplyRule());
               }
             }}
@@ -220,11 +258,13 @@ export function Factorial() {
         {/* Special Rule Buttons */}
         <div className={styles.row}>
           <button
-            type='button'
-            aria-label='Done Rule'
+            type="button"
+            aria-label="Done Rule"
             onClick={() => {
-              preState = { ...state.present };
-              type = Action.DoneRule;
+              // preState = { ...state.present };
+              setPreState({ ...state.present });
+              // type = Action.DoneRule;
+              setType(Action.DoneRule);
               dispatch(DoneRule());
             }}
             disabled={!(factArray.length > 0 && factValue === 0)}
@@ -232,11 +272,13 @@ export function Factorial() {
             Apply Done Rule
           </button>
           <button
-            type='button'
-            aria-label='Zero Rule'
+            type="button"
+            aria-label="Zero Rule"
             onClick={() => {
-              preState = { ...state.present };
-              type = Action.ZeroRule;
+              // preState = { ...state.present };
+              setPreState({ ...state.present });
+              // type = Action.ZeroRule;
+              setType(Action.ZeroRule);
               dispatch(ZeroRule());
             }}
             disabled={factValue !== 0}
@@ -244,11 +286,13 @@ export function Factorial() {
             Apply Zero Rule
           </button>
           <button
-            type='button'
-            aria-label='One Rule'
+            type="button"
+            aria-label="One Rule"
             onClick={() => {
-              preState = { ...state.present };
-              type = Action.OneRule;
+              // preState = { ...state.present };
+              setPreState({ ...state.present });
+              // type = Action.OneRule;
+              setType(Action.OneRule);
               dispatch(OneRule());
             }}
           >
@@ -258,11 +302,13 @@ export function Factorial() {
         {/* Undo, Redo, Reset Buttons */}
         <div className={styles.row}>
           <button
-            type='button'
-            aria-label='Undo'
+            type="button"
+            aria-label="Undo"
             onClick={() => {
-              preState = { ...state.present };
-              type = Action.Undo;
+              // preState = { ...state.present };
+              setPreState({ ...state.present });
+              // type = Action.Undo;
+              setType(Action.Undo);
               dispatch(ActionCreators.undo());
             }}
             disabled={!state.past.length}
@@ -270,11 +316,13 @@ export function Factorial() {
             Undo
           </button>
           <button
-            type='button'
-            aria-label='Redo'
+            type="button"
+            aria-label="Redo"
             onClick={() => {
-              preState = { ...state.present };
-              type = Action.Redo;
+              // preState = { ...state.present };
+              setPreState({ ...state.present });
+              // type = Action.Redo;
+              setType(Action.Redo);
               dispatch(ActionCreators.redo());
             }}
             disabled={!state.future.length}
@@ -282,11 +330,13 @@ export function Factorial() {
             Redo
           </button>
           <button
-            type='button'
-            aria-label='Reset'
+            type="button"
+            aria-label="Reset"
             onClick={() => {
-              preState = { ...state.present };
-              type = Action.Reset;
+              // preState = { ...state.present };
+              setPreState({ ...state.present });
+              // type = Action.Reset;
+              setType(Action.Reset);
               dispatch(HandleReset());
               dispatch(Init(inputValue));
               dispatch(ActionCreators.clearHistory());
@@ -299,26 +349,34 @@ export function Factorial() {
         {/* Submit Button */}
         <div className={styles.row}>
           <button
-            type='button'
-            aria-label='Submit'
+            type="button"
+            aria-label="Submit"
             onClick={() => {
               // Submit Action
-              preState = { ...state.present };
-              type = Action.Submit;
+              // preState = { ...state.present };
+              setPreState({ ...state.present });
+              // type = Action.Submit;
+              setType(Action.Submit);
               // console.log('id:', 4, 'runId:', runId, 'type:', type, 'preState:', preState, 'postState:', state.present, 'timestamp:', Date.now());
               // Dialog box to take confirmation of submission.
-              let submitStatus = window.confirm("Do you want to confirm submission? Press OK to confirm.");
+              let submitStatus = window.confirm(
+                "Do you want to confirm submission? Press OK to confirm."
+              );
               // If Confirm Submit
               if (submitStatus) {
-                preState = { ...state.present };
-                type = Action.ConfirmSubmit;
+                // preState = { ...state.present };
+                setPreState({ ...state.present });
+                // type = Action.ConfirmSubmit;
+                setType(Action.ConfirmSubmit);
                 // console.log('id:', 4, 'runId:', runId, 'type:', type, 'preState:', preState, 'postState:', state.present, 'timestamp:', Date.now());
                 // redirect url
               }
               // If Cancel Submit
               else {
-                preState = { ...state.present };
-                type = Action.CancelSubmit;
+                // preState = { ...state.present };
+                setPreState({ ...state.present });
+                // type = Action.CancelSubmit;
+                setType(Action.CancelSubmit);
                 // console.log('id:', 4, 'runId:', runId, 'type:', type, 'preState:', preState, 'postState:', state.present, 'timestamp:', Date.now());
               }
             }}
