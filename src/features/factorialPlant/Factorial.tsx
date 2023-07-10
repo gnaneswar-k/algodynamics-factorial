@@ -1,7 +1,5 @@
 import React, { useEffect, useState } from 'react';
 import { ActionCreators } from 'redux-undo';
-// import { nanoid } from '@reduxjs/toolkit';
-// import axios from 'axios';
 
 import { useAppSelector, useAppDispatch } from '../../app/hooks';
 import {
@@ -21,7 +19,7 @@ import {
   FactorialState,
 } from './factorialSlice';
 import styles from './Factorial.module.css';
-import API from '../../api';
+import API from '../../app/api';
 
 // List of Actions
 const Action = Object.freeze({
@@ -45,19 +43,21 @@ const createRun = async (userId: string, setRunId: any) => {
   await API
     .post(
       `/createRun`, JSON.stringify({
-      id: userId,
-      machineType: 4,
-    }))
+        id: userId,
+        machineType: 4,
+      })
+    )
     .then(response => {
       // console.log(response);
       // console.log(response.data);
       // runId = response.data.id;
       setRunId(response.data.id);
-    }).catch(error => {
+    })
+    .catch(error => {
       console.log(error);
-    } 
-  );
+    });
 };
+
 const updateRun = async (
   payload: any,
   runId: string,
@@ -65,6 +65,7 @@ const updateRun = async (
   preState: FactorialState,
   postState: FactorialState
 ) => {
+  // If runId is undefined, then the user has not been initialised
   if (runId === "") {
     return;
   }
@@ -76,24 +77,24 @@ const updateRun = async (
     postState: postState === undefined ? {} : postState,
     timestamp: Date.now()
   }));
-  // if runId is undefined, then the user has not been initialised
   await API
     .post(
       `/updateRun`, JSON.stringify({
-      id: runId,
-      payload: payload === undefined ? {} : payload,
-      type: type,
-      preState: preState === undefined ? {} : preState,
-      postState: postState === undefined ? {} : postState,
-      timestamp: Date.now()
-    }))
+        id: runId,
+        payload: payload === undefined ? {} : payload,
+        type: type,
+        preState: preState === undefined ? {} : preState,
+        postState: postState === undefined ? {} : postState,
+        timestamp: Date.now()
+      })
+    )
     .then(response => {
       console.log(response);
       console.log(response.data);
-    }).catch(error => {
+    })
+    .catch(error => {
       console.log(error);
-    } 
-  );
+    });
 };
 
 // Initialisation
@@ -124,7 +125,6 @@ export function Factorial() {
     {} as FactorialState
   );
   const [type, setType] = useState("Uninitialised");
-
   const [initialised, setInitialised] = useState(false);
 
   // Generating Run ID
@@ -132,6 +132,7 @@ export function Factorial() {
     createRun(userId, setRunId);
   }
 
+  // Logging after every user action
   useEffect(() => {
     if (userId !== null) {
       updateRun({}, runId, type, preState, state.present);
@@ -167,13 +168,10 @@ export function Factorial() {
           type="button"
           aria-label="initialise"
           onClick={() => {
-            // preState = { ...state.present };
             setPreState({ ...state.present });
-            // type = Action.Init;
             setType(Action.Init);
             dispatch(Init(inputValue));
             dispatch(ActionCreators.clearHistory());
-            // initialised = true;
             setInitialised(true);
           }}
           disabled={factValue !== null || factArray.length > 0}
@@ -200,9 +198,7 @@ export function Factorial() {
                   type="button"
                   key={index.toString()}
                   onClick={() => {
-                    // preState = { ...state.present };
                     setPreState({ ...state.present });
-                    // type = Action.SelectNumber;
                     setType(Action.SelectNumber);
                     dispatch(HandleSelect(index));
                   }}
@@ -210,8 +206,8 @@ export function Factorial() {
                     factValue === null && factArray.length === 1
                       ? styles.final
                       : index === indexOne || index === indexTwo
-                      ? styles.selected
-                      : styles.regular
+                        ? styles.selected
+                        : styles.regular
                   }
                 >
                   {num}
@@ -226,9 +222,7 @@ export function Factorial() {
             type="button"
             aria-label="Factorial Rule"
             onClick={() => {
-              // preState = { ...state.present };
               setPreState({ ...state.present });
-              // type = Action.FactorialRule;
               setType(Action.FactorialRule);
               dispatch(FactorialRule());
             }}
@@ -240,9 +234,7 @@ export function Factorial() {
             type="button"
             aria-label="Multiply Rule"
             onClick={() => {
-              // preState = { ...state.present };
               setPreState({ ...state.present });
-              // type = Action.MultiplyRule;
               setType(Action.MultiplyRule);
               if (indexOne === null || indexTwo == null) {
                 alert("Please select two numbers to multiply.");
@@ -261,9 +253,7 @@ export function Factorial() {
             type="button"
             aria-label="Done Rule"
             onClick={() => {
-              // preState = { ...state.present };
               setPreState({ ...state.present });
-              // type = Action.DoneRule;
               setType(Action.DoneRule);
               dispatch(DoneRule());
             }}
@@ -275,9 +265,7 @@ export function Factorial() {
             type="button"
             aria-label="Zero Rule"
             onClick={() => {
-              // preState = { ...state.present };
               setPreState({ ...state.present });
-              // type = Action.ZeroRule;
               setType(Action.ZeroRule);
               dispatch(ZeroRule());
             }}
@@ -289,9 +277,7 @@ export function Factorial() {
             type="button"
             aria-label="One Rule"
             onClick={() => {
-              // preState = { ...state.present };
               setPreState({ ...state.present });
-              // type = Action.OneRule;
               setType(Action.OneRule);
               dispatch(OneRule());
             }}
@@ -305,9 +291,7 @@ export function Factorial() {
             type="button"
             aria-label="Undo"
             onClick={() => {
-              // preState = { ...state.present };
               setPreState({ ...state.present });
-              // type = Action.Undo;
               setType(Action.Undo);
               dispatch(ActionCreators.undo());
             }}
@@ -319,9 +303,7 @@ export function Factorial() {
             type="button"
             aria-label="Redo"
             onClick={() => {
-              // preState = { ...state.present };
               setPreState({ ...state.present });
-              // type = Action.Redo;
               setType(Action.Redo);
               dispatch(ActionCreators.redo());
             }}
@@ -333,9 +315,7 @@ export function Factorial() {
             type="button"
             aria-label="Reset"
             onClick={() => {
-              // preState = { ...state.present };
               setPreState({ ...state.present });
-              // type = Action.Reset;
               setType(Action.Reset);
               dispatch(HandleReset());
               dispatch(Init(inputValue));
@@ -353,10 +333,11 @@ export function Factorial() {
             aria-label="Submit"
             onClick={() => {
               // Submit Action
-              // preState = { ...state.present };
               setPreState({ ...state.present });
-              // type = Action.Submit;
               setType(Action.Submit);
+              if (userId !== null) {
+                updateRun({}, runId, type, preState, state.present);
+              }
               // console.log('id:', 4, 'runId:', runId, 'type:', type, 'preState:', preState, 'postState:', state.present, 'timestamp:', Date.now());
               // Dialog box to take confirmation of submission.
               let submitStatus = window.confirm(
@@ -364,18 +345,17 @@ export function Factorial() {
               );
               // If Confirm Submit
               if (submitStatus) {
-                // preState = { ...state.present };
                 setPreState({ ...state.present });
-                // type = Action.ConfirmSubmit;
                 setType(Action.ConfirmSubmit);
+                if (userId !== null) {
+                  updateRun({}, runId, type, preState, state.present);
+                }
                 // console.log('id:', 4, 'runId:', runId, 'type:', type, 'preState:', preState, 'postState:', state.present, 'timestamp:', Date.now());
                 // redirect url
               }
               // If Cancel Submit
               else {
-                // preState = { ...state.present };
                 setPreState({ ...state.present });
-                // type = Action.CancelSubmit;
                 setType(Action.CancelSubmit);
                 // console.log('id:', 4, 'runId:', runId, 'type:', type, 'preState:', preState, 'postState:', state.present, 'timestamp:', Date.now());
               }
