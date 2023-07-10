@@ -126,6 +126,7 @@ export function Factorial() {
   );
   const [type, setType] = useState("Uninitialised");
   const [initialised, setInitialised] = useState(false);
+  const [clickedSubmit, setClickedSubmit] = useState(false);
 
   // Generating Run ID
   if (userId !== null && runId === "") {
@@ -138,6 +139,31 @@ export function Factorial() {
       updateRun({}, runId, type, preState, state.present);
     }
   });
+
+  // Post-Submit confirmation
+  if (clickedSubmit) {
+    // Dialog box to take confirmation of submission.
+    let submitStatus = window.confirm(
+      "Do you want to confirm submission? Press OK to confirm."
+    );
+    // If Confirm Submit
+    if (submitStatus) {
+      setPreState({ ...state.present });
+      setType(Action.ConfirmSubmit);
+      // console.log('id:', 4, 'runId:', runId, 'type:', type, 'preState:', preState, 'postState:', state.present, 'timestamp:', Date.now());
+      // redirect url
+    }
+    // If Cancel Submit
+    else {
+      setPreState({ ...state.present });
+      setType(Action.CancelSubmit);
+      // console.log('id:', 4, 'runId:', runId, 'type:', type, 'preState:', preState, 'postState:', state.present, 'timestamp:', Date.now());
+    }
+    setClickedSubmit(false);
+  };
+  if (type === Action.ConfirmSubmit) {
+    console.log("Confirmed."); // For testing.
+  }
 
   return (
     <div>
@@ -335,30 +361,8 @@ export function Factorial() {
               // Submit Action
               setPreState({ ...state.present });
               setType(Action.Submit);
-              if (userId !== null) {
-                updateRun({}, runId, type, preState, state.present);
-              }
+              setClickedSubmit(true);
               // console.log('id:', 4, 'runId:', runId, 'type:', type, 'preState:', preState, 'postState:', state.present, 'timestamp:', Date.now());
-              // Dialog box to take confirmation of submission.
-              let submitStatus = window.confirm(
-                "Do you want to confirm submission? Press OK to confirm."
-              );
-              // If Confirm Submit
-              if (submitStatus) {
-                setPreState({ ...state.present });
-                setType(Action.ConfirmSubmit);
-                if (userId !== null) {
-                  updateRun({}, runId, type, preState, state.present);
-                }
-                // console.log('id:', 4, 'runId:', runId, 'type:', type, 'preState:', preState, 'postState:', state.present, 'timestamp:', Date.now());
-                // redirect url
-              }
-              // If Cancel Submit
-              else {
-                setPreState({ ...state.present });
-                setType(Action.CancelSubmit);
-                // console.log('id:', 4, 'runId:', runId, 'type:', type, 'preState:', preState, 'postState:', state.present, 'timestamp:', Date.now());
-              }
             }}
             disabled={!state.past.length}
           >
