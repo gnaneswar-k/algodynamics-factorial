@@ -97,6 +97,20 @@ const updateRun = async (
     });
 };
 
+const complete = async (id: string) => {
+  let final = `/complete/` + id;
+  await API
+    .get(final)
+    .then(response => {
+      // console.log(response);
+      // console.log(response.data);
+      window.alert("Thank you for your participation.");
+    })
+    .catch(error => {
+      console.log(error);
+    });
+};
+
 // Initialisation
 // let preState: FactorialState;
 // let type: string;
@@ -126,7 +140,7 @@ export function Factorial() {
   );
   const [type, setType] = useState("Uninitialised");
   const [initialised, setInitialised] = useState(false);
-  // const [clickedSubmit, setClickedSubmit] = useState(false);
+  const [clickedSubmit, setClickedSubmit] = useState(false);
 
   // Generating Run ID
   if (userId !== null && runId === "") {
@@ -140,37 +154,12 @@ export function Factorial() {
     }
   });
 
-  // Post-Submit confirmation
-  if (type === Action.Submit) {
-    // Dialog box to take confirmation of submission.
-    let submitStatus = window.confirm(
-      "Do you want to confirm submission? Press OK to confirm."
-    );
-    // If Confirm Submit
-    if (submitStatus) {
-      setPreState({ ...state.present });
-      setType(Action.ConfirmSubmit);
-      // console.log('id:', 4, 'runId:', runId, 'type:', type, 'preState:', preState, 'postState:', state.present, 'timestamp:', Date.now());
-      // redirect url
-    }
-    // If Cancel Submit
-    else {
-      setPreState({ ...state.present });
-      setType(Action.CancelSubmit);
-      // console.log('id:', 4, 'runId:', runId, 'type:', type, 'preState:', preState, 'postState:', state.present, 'timestamp:', Date.now());
-    }
-    // setClickedSubmit(false);
-  };
-  if (type === Action.ConfirmSubmit) {
-    console.log("Confirmed."); // For testing.
-  }
-
   return (
     <div>
       <div
         id="Initialiser"
         style={{
-          display: initialised ? "none" : "flex",
+          display: initialised ? "none" : "flex", // Visible only at the start before initialisation.
           flexDirection: "column",
           alignItems: "center",
           justifyContent: "center",
@@ -207,7 +196,10 @@ export function Factorial() {
       </div>
       <div
         style={{
-          display: initialised ? "flex" : "none",
+          // Hidden before initialisation, during and after submission confirmation.
+          display: initialised && !clickedSubmit && type !== Action.ConfirmSubmit
+            ? "flex"
+            : "none",
           flexDirection: "column",
         }}
       >
@@ -358,17 +350,63 @@ export function Factorial() {
             type="button"
             aria-label="Submit"
             onClick={() => {
-              // Submit Action
               setPreState({ ...state.present });
               setType(Action.Submit);
-              // setClickedSubmit(true);
-              // console.log('id:', 4, 'runId:', runId, 'type:', type, 'preState:', preState, 'postState:', state.present, 'timestamp:', Date.now());
+              setClickedSubmit(true);
             }}
-            disabled={!state.past.length}
           >
             Submit
           </button>
         </div>
+      </div>
+      <div
+        style={{
+          display: clickedSubmit ? "flex" : "none", // Visible only while confirming submission.
+          flexDirection: "column",
+        }}
+        className={styles.confirmBox}
+      >
+        {/* Confirm or Cancel Submit Section */}
+        Do you want to confirm your submission?
+        <div className={styles.row}>
+          <button
+            type="button"
+            aria-label="Confirm-Submit"
+            onClick={() => {
+              setPreState({ ...state.present });
+              setType(Action.ConfirmSubmit);
+              setClickedSubmit(false);
+              if (userId !== null) {
+                complete(userId);
+              };
+              console.log("Confirmed.");
+            }}
+            disabled={!clickedSubmit}
+          >
+            Confirm
+          </button>
+          <button
+            type="button"
+            aria-label="Cancel-Submit"
+            onClick={() => {
+              setPreState({ ...state.present });
+              setType(Action.CancelSubmit);
+              setClickedSubmit(false);
+            }}
+            disabled={!clickedSubmit}
+          >
+            Cancel
+          </button>
+        </div>
+      </div>
+      <div
+        style={{
+          display: type === Action.ConfirmSubmit ? "flex" : "none", // Visible after confirming submission.
+          flexDirection: "column",
+        }}
+      >
+        {/* Thank You Message */}
+        Thank You For Participating!
       </div>
     </div>
   );
