@@ -133,7 +133,7 @@ export function Factorial() {
   const state = useAppSelector(selectState);
 
   // Initialisation
-  let inputValue = 1;
+  const [inputValue, setInputValue] = useState(1);
   const [runId, setRunId] = useState("");
   const [preState, setPreState] = useState<FactorialState>(
     {} as FactorialState
@@ -174,9 +174,7 @@ export function Factorial() {
           required
           defaultValue={1}
           size={1}
-          onChange={(e) => {
-            inputValue = Number(e.target.value);
-          }}
+          onChange={(e) => { setInputValue(Number(e.target.value)) }}
           style={{ textAlign: "center" }}
         />
         <button
