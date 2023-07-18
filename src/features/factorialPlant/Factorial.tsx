@@ -152,7 +152,7 @@ export function Factorial() {
     if (userId !== null) {
       updateRun({}, runId, type, preState, state.present);
     }
-  });
+  },[runId,type,preState,state]); // API will be called when these dependencies change
 
   return (
     <div>
